@@ -1,25 +1,56 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+import Login from '../views/LoginView.vue'
 
 const routes = [
+  // 路由配置
+  // 路由重定向
+  { path: '/', redirect: '/home' },
   {
-    path: '/',
-    name: 'home',
-    component: HomeView
+    path: '/login',
+    name: 'loginview',
+    component: Login
   },
+  // 路由懒加载 首页
   {
-    path: '/about',
-    name: 'about',
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () => import(/* webpackChunkName: "about" */ '../views/AboutView.vue')
+    path: '/home',
+    name: 'homeview',
+    component: () => import('../views/HomeView.vue'),
+    redirect: '/index',
+    children: [
+      {
+        path: '/index',
+        name: 'indexview',
+        component: () => import('../views/IndexView.vue')
+      },
+      {
+        path: '/user',
+        name: 'userview',
+        component: () => import('../views/uesr/UserView.vue')
+      },
+      {
+        path: '/slide',
+        name: 'slideview',
+        component: () => import('../views/slide/SlideView.vue')
+      }
+    ]
   }
 ]
 
 const router = createRouter({
   history: createWebHashHistory(),
   routes
+})
+
+// 挂载路由导航守卫,避免用户未登录就能访问须授权页面
+router.beforeEach((to, form, next) => {
+  // to 将要访问的路径
+  // from 代表从哪个路径跳转而来
+  // next 是一个函数,表示放行
+  // next() 放行  next('/login') 强制跳转
+  if (to.path.toLowerCase() === '/login') return next()
+  const isToken = localStorage.getItem('token')
+  if (!isToken) return next('/login')
+  next()
 })
 
 export default router
